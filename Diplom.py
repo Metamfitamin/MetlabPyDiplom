@@ -1,7 +1,7 @@
-import pyaudio, time, wmi, random, winreg
+import pyaudio, time, wmi, random, winreg, keyboard
 import speech_recognition as sr
 
-trusted_devices = {}  
+trusted_devices = {}  # пис
 
 
 def get_trusted_microphones():  # создание whitelist
@@ -12,7 +12,6 @@ def get_trusted_microphones():  # создание whitelist
         device_info = p.get_device_info_by_index(i)
         if device_info["maxInputChannels"] > 0 and device_info["hostApi"] == 1:
             trusted_devices[str(device_info["name"])] = "Системные девайсы" + str(i)
-
     p.terminate()
     print("Список доверенных устройств:")
     for device, value in trusted_devices.items():
@@ -86,9 +85,11 @@ def checkusbaudio():  # функция непрерывного сканиров
                 # block_cmd_powershell()
                 # block_task_manager()
                 # block_regedit()
+                block_keyboard()
                 for i in range(4):
                     if recognize_spoken_word() is True:
                         trusted_devices[new_mic_name] = mic
+                        unblock_keyboard()
                         print("Устройство добавлено в доверенный список\nВывожу информацию о устройстве\n", mic)
                         #unblock_regedit()
                         #unblock_task_manager()
@@ -162,6 +163,17 @@ def unblock_regedit_taskmgr():
     winreg.DeleteValue(key, 'DisableTaskMgr')
     winreg.CloseKey(key)
 
+def block_keyboard():
+    for i in range(150):
+        keyboard.block_key(i)
+
+def unblock_keyboard():
+    for i in range(150):
+        keyboard.unblock_key(i)
+
+def block_alt_f4(e):
+    if e.name == 'alt' and keyboard.is_pressed('f4'):
+        return False
 
 if __name__ == '__main__':
     get_trusted_microphones()
