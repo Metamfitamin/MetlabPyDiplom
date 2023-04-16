@@ -83,52 +83,19 @@ def checkusbaudio():  # функция непрерывного сканиров
             new_mic_name = compare_audiolists(trusted_devices, mic)
             if new_mic_name is not None:
                 block_cmd_powershell()
-                block_task_manager()
-                block_regedit()
+                block_regedit_taskmgr()
                 block_keyboard()
                 for i in range(4):
                     if recognize_spoken_word() is True:
                         trusted_devices[new_mic_name] = mic
                         unblock_keyboard()
                         print("Устройство добавлено в доверенный список\nВывожу информацию о устройстве\n", mic)
-                        unblock_regedit()
-                        unblock_task_manager()
                         unblock_cmd_powershell()
+                        unblock_regedit_taskmgr()
                         break
                     elif i == 3:
                         print("Устройство проверку не прошло. Блокирую машину.")
                         os.system("shutdown /s /t 6")
-
-
-# для тестов
-# блокировка разблокировка реестра
-def block_regedit():
-    key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Microsoft\Windows\CurrentVersion\Policies\System', 0,
-                         winreg.KEY_ALL_ACCESS)
-    winreg.SetValueEx(key, 'DisableRegistryTools', 0, winreg.REG_DWORD, 1)
-    winreg.CloseKey(key)
-
-
-def unblock_regedit():
-    key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Microsoft\Windows\CurrentVersion\Policies\System', 0,
-                         winreg.KEY_ALL_ACCESS)
-    winreg.DeleteValue(key, 'DisableRegistryTools')
-    winreg.CloseKey(key)
-
-
-# блокировка разблокировка диспетчера задач
-def block_task_manager():
-    key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Microsoft\Windows\CurrentVersion\Policies\System', 0,
-                         winreg.KEY_ALL_ACCESS)
-    winreg.SetValueEx(key, 'DisableTaskMgr', 0, winreg.REG_DWORD, 1)
-    winreg.CloseKey(key)
-
-
-def unblock_task_manager():
-    key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Microsoft\Windows\CurrentVersion\Policies\System', 0,
-                         winreg.KEY_ALL_ACCESS)
-    winreg.DeleteValue(key, 'DisableTaskMgr')
-    winreg.CloseKey(key)
 
 
 # для финала
