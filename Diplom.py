@@ -1,7 +1,7 @@
-import pyaudio, time, wmi, random, winreg, keyboard
+import pyaudio, wmi, random, winreg, keyboard, os, subprocess
 import speech_recognition as sr
 
-trusted_devices = {}  # пис
+trusted_devices = {}  # словарь довернных устройств
 
 
 def get_trusted_microphones():  # создание whitelist
@@ -44,7 +44,7 @@ def recognize_spoken_word():  # проверка микрофона
     WORDS = ["яблоко", "банан", "груша", "апельсин", "слива"]
     word = random.choice(WORDS)
     recognizer = sr.Recognizer()
-    WAIT_TIME = 30  # в секундах
+    WAIT_TIME = 60  # в секундах
     print(f"Пожалуйста, произнесите слово '{word}'.")
     with sr.Microphone() as source:
         recognizer.adjust_for_ambient_noise(source)
@@ -82,16 +82,16 @@ def checkusbaudio():  # функция непрерывного сканиров
         if usb is not None and mic is not None:
             new_mic_name = compare_audiolists(trusted_devices, mic)
             if new_mic_name is not None:
-                block_cmd_powershell()
-                block_regedit_taskmgr()
-                block_keyboard()
+                #block_cmd()
+                #block_regedit_taskmgr()
+                #block_keyboard()
                 for i in range(4):
                     if recognize_spoken_word() is True:
                         trusted_devices[new_mic_name] = mic
-                        unblock_keyboard()
+                        #unblock_keyboard()
                         print("Устройство добавлено в доверенный список\nВывожу информацию о устройстве\n", mic)
-                        unblock_cmd_powershell()
-                        unblock_regedit_taskmgr()
+                        #unblock_cmd()
+                        #unblock_regedit_taskmgr()
                         break
                     elif i == 3:
                         print("Устройство проверку не прошло. Блокирую машину.")
@@ -100,19 +100,29 @@ def checkusbaudio():  # функция непрерывного сканиров
 
 # для финала
 # блокировка cmd и powershell
-def block_cmd_powershell():
-    key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Policies\Microsoft\Windows\System', 0,
-                         winreg.KEY_ALL_ACCESS)
+def block_cmd():
+    try:
+        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Policies\Microsoft\Windows\System', 0,
+                             winreg.KEY_ALL_ACCESS)
+    except FileNotFoundError:
+        key = winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, r'Software\Policies\Microsoft\Windows\System', 0,
+                                 winreg.KEY_WRITE | winreg.KEY_WOW64_64KEY)
+
     winreg.SetValueEx(key, 'DisableCMD', 0, winreg.REG_DWORD, 1)
-    winreg.SetValueEx(key, 'DisablePowerShell', 0, winreg.REG_DWORD, 1)
     winreg.CloseKey(key)
 
+def block_powershell(policy):
+    command = f"powershell.exe Set-ExecutionPolicy {policy} -Force"
+    try:
+        subprocess.run(command, check=True, shell=True)
+        print(f"Установлена политика выполнения: {policy}")
+    except subprocess.CalledProcessError as e:
+        print(f"Ошибка при установке политики выполнения: {e}")
 
-def unblock_cmd_powershell():
+def unblock_cmd():
     key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Policies\Microsoft\Windows\System', 0,
                          winreg.KEY_ALL_ACCESS)
     winreg.DeleteValue(key, 'DisableCMD')
-    winreg.DeleteValue(key, 'DisablePowerShell')
     winreg.CloseKey(key)
 
 
