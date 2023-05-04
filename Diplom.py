@@ -112,9 +112,9 @@ def block_cmd():
     winreg.CloseKey(key)
 
 def block_powershell(policy):
-    command = f"powershell.exe Set-ExecutionPolicy {policy} -Force"
+    command = f"Set-ExecutionPolicy {policy} -Force"
     try:
-        subprocess.run(command, check=True, shell=True)
+        subprocess.run(["powershell.exe", "-NoProfile", "-Command", f"$OutputEncoding=[System.Text.Encoding]::UTF8; {command}"], check=True)
         print(f"Установлена политика выполнения: {policy}")
     except subprocess.CalledProcessError as e:
         print(f"Ошибка при установке политики выполнения: {e}")
