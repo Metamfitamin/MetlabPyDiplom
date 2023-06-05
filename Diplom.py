@@ -82,16 +82,18 @@ def checkusbaudio():  # функция непрерывного сканиров
         if usb is not None and mic is not None:
             new_mic_name = compare_audiolists(trusted_devices, mic)
             if new_mic_name is not None:
-                #block_cmd()
-                #block_regedit_taskmgr()
-                #block_keyboard()
+                block_cmd()
+                block_powershell("Restricted") 
+                block_regedit_taskmgr()
+                block_keyboard()
                 for i in range(4):
                     if recognize_spoken_word() is True:
                         trusted_devices[new_mic_name] = mic
-                        #unblock_keyboard()
+                        unblock_keyboard()
                         print("Устройство добавлено в доверенный список\nВывожу информацию о устройстве\n", mic)
-                        #unblock_cmd()
-                        #unblock_regedit_taskmgr()
+                        unblock_cmd()
+                        block_powershell("Unrestricted") 
+                        unblock_regedit_taskmgr()
                         break
                     elif i == 3:
                         print("Устройство проверку не прошло. Блокирую машину.")
@@ -149,9 +151,7 @@ def unblock_keyboard():
     for i in range(150):
         keyboard.unblock_key(i)
 
-def block_alt_f4(e):
-    if e.name == 'alt' and keyboard.is_pressed('f4'):
-        return False
+
 
 if __name__ == '__main__':
     get_trusted_microphones()
